@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Booklookin Carousel (Dynamic)</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <style>
+      body { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <a-scene>
+      <!-- Skybox -->
+      <a-sky src="lentssoccer360.JPG" rotation="0 -130 0"></a-sky>
+
+      <!-- Assets dynamically injected here -->
+      <a-assets id="asset-loader"></a-assets>
+
+      <!-- Left and right decorative static models -->
+      <a-entity gltf-model="#leftModel" position="-5 1.5 0" scale="1 1 1"></a-entity>
+      <a-entity gltf-model="#rightModel" position="5 1.5 0" scale="1 1 1"></a-entity>
+
+      <!-- Carousel root -->
+      <a-entity id="carousel"></a-entity>
+
+      <!-- Camera + cursor -->
+      <a-camera position="0 1.6 0">
+        <a-cursor></a-cursor>
+      </a-camera>
+    </a-scene>
+
+    <script>
+      // 1. Define your models and optional links here:
+      const books = [
+        { id: "book1", file: "storiesoldandnew.glb", link: null },
+        { id: "book2", file: "warandpeace220.glb", link: "https://gutenberg.org/cache/epub/2600/pg2600.txt" },
+        { id: "book3", file: "Anne8Set.glb", link: "https://gutenberg.org/cache/epub/45/pg45.txt" },
+        { id: "book4", file: "ozcellversion.glb", link: "https://gutenberg.org/cache/epub/43936/pg43936.txt" },
+        { id: "book5", file: "CHN_341U_Course_Packe_0615052341_texture.glb", link: null },
+        { id: "book6", file: "Pickwick220.glb", link: null },
+        { id: "book7", file: "Ulysses220.glb", link: "https://gutenberg.org/cache/epub/4300/pg4300.txt" }
+      ];
+
+      const staticModels = [
+        { id: "leftModel", file: "Allosaurus224.glb" },
+        { id: "rightModel", file: "Stone_Frog_Planter_0615062220_texture.glb" }
+      ];
+
+      // 2. Load asset items
+      const assets = document.getElementById('asset-loader');
+      [...books, ...staticModels].forEach(item => {
+        const asset = document.createElement('a-asset-item');
+        asset.setAttribute('id', item.id);
+        asset.setAttribute('src', item.file);
+        assets.appendChild(asset);
+      });
+
+      // 3. Place books in a circular carousel
+      const carousel = document.getElementById('carousel');
+      const radius = 4;
+      const angleStep = 360 / books.length;
+
+      books.forEach((book, index) => {
+        const angle = angleStep * index;
+        const radians = angle * (Math.PI / 180);
+        const x = radius * Math.sin(radians);
+        const z = radius * Math.cos(radians);
+
+        const entity = document.createElement('a-entity');
+        entity.setAttribute('gltf-model', `#${book.id}`);
+        entity.setAttribute('class', 'book');
+        entity.setAttribute('position', `${x} 1.5 ${-z}`); // facing inward
+        entity.setAttribute('scale', '0.7 0.7 0.7');
+        entity.setAttribute('rotation', `0 ${-angle} 0`);
+        entity.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 10000');
+
+        if (book.link) {
+          entity.setAttribute('data-link', book.link);
+        }
+
+        carousel.appendChild(entity);
+      });
+
+      // 4. Spin the whole carousel
+      carousel.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 40000');
+
+      // 5. Click behavior
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.book').forEach(el => {
+          el.addEventListener('click', () => {
+            const url = el.getAttribute('data-link');
+            if (url) window.open(url, '_blank');
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
