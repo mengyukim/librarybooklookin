@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -10,90 +11,82 @@
   </head>
   <body>
     <a-scene>
-      <!-- Skybox -->
-      <a-sky src="lentssoccer360.JPG" rotation="0 -130 0"></a-sky>
 
-      <!-- Assets dynamically injected here -->
-      <a-assets id="asset-loader"></a-assets>
+      <!-- Background skybox -->
+      <a-sky src="360.jpg" rotation="0 -130 0"></a-sky>
 
-      <!-- Left and right decorative static models -->
-      <a-entity gltf-model="#leftModel" position="-5 1.5 0" scale="3 3 3" rotation="0 180 0"></a-entity>
-      <a-entity gltf-model="#rightModel" position="5 1.5 0" scale="1 1 1"></a-entity>
+      <!-- Static models -->
+      <a-entity gltf-model="Allosaurus224.glb" position="-5 0 -3" scale="3 3 3" rotation="0 180 0"></a-entity>
+      <a-entity gltf-model="Stone_Frog_Planter_0615062220_texture.glb" position="5 0 -3" scale="1.5 1.5 1.5" rotation="0 -45 0"></a-entity>
 
-      <!-- Carousel root -->
-      <a-entity id="carousel"></a-entity>
+      <!-- Rotating carousel container -->
+      <a-entity id="carousel" rotation="0 0 0"></a-entity>
 
-      <!-- Camera + cursor -->
-      <a-camera position="0 1.6 0">
-        <a-cursor></a-cursor>
+      <!-- Camera and cursor -->
+      <a-camera>
+        <a-cursor fuse="false" raycaster="objects: .bookclick-target"></a-cursor>
       </a-camera>
+
     </a-scene>
 
     <script>
-      // 1. Define your models and optional links here:
+      // Book data: GLB filenames and optional Gutenberg links
       const books = [
         { id: "book1", file: "storiesoldandnew.glb", link: null },
         { id: "book2", file: "warandpeace220.glb", link: "https://gutenberg.org/cache/epub/2600/pg2600.txt" },
         { id: "book3", file: "Anne8Set.glb", link: "https://gutenberg.org/cache/epub/45/pg45.txt" },
         { id: "book4", file: "ozcellversion.glb", link: "https://gutenberg.org/cache/epub/43936/pg43936.txt" },
         { id: "book5", file: "CHN_341U_Course_Packe_0615052341_texture.glb", link: null },
-        { id: "book6", file: "Pickwick220.glb", link: null },
+        { id: "book6", file: "Pickwick220.glb", link: "https://gutenberg.org/cache/epub/580/pg580.txt" },
         { id: "book7", file: "Ulysses220.glb", link: "https://gutenberg.org/cache/epub/4300/pg4300.txt" }
       ];
 
-      const staticModels = [
-        { id: "leftModel", file: "Allosaurus224.glb" },
-        { id: "rightModel", file: "Stone_Frog_Planter_0615062220_texture.glb" }
-      ];
-
-      // 2. Load asset items
-      const assets = document.getElementById('asset-loader');
-      [...books, ...staticModels].forEach(item => {
-        const asset = document.createElement('a-asset-item');
-        asset.setAttribute('id', item.id);
-        asset.setAttribute('src', item.file);
-        assets.appendChild(asset);
-      });
-
-      // 3. Place books in a circular carousel
       const carousel = document.getElementById('carousel');
-      const radius = 4;
-      const angleStep = 360 / books.length;
+      const radius = 5;
 
-      books.forEach((book, index) => {
-        const angle = angleStep * index;
-        const radians = angle * (Math.PI / 180);
-        const x = radius * Math.sin(radians);
-        const z = radius * Math.cos(radians);
+      books.forEach((book, i) => {
+        const angle = (i / books.length) * Math.PI * 2;
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);
+        const y = 1.5;
 
-        const entity = document.createElement('a-entity');
-        entity.setAttribute('gltf-model', `#${book.id}`);
-        entity.setAttribute('class', 'book');
-        entity.setAttribute('position', `${x} 1.5 ${-z}`); // facing inward
-        entity.setAttribute('scale', '0.7 0.7 0.7');
-        entity.setAttribute('rotation', `0 ${-angle} 0`);
-        entity.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 10000');
+        const el = document.createElement('a-entity');
+        el.setAttribute('id', book.id);
+        el.setAttribute('gltf-model', book.file);
+        el.setAttribute('position', `${x} ${y} ${z}`);
+        el.setAttribute('rotation', `0 ${-angle * (180/Math.PI) + 90} 0`);
+        el.setAttribute('scale', '1 1 1');
+        if (book.link) el.setAttribute('data-link', book.link);
+        el.setAttribute('bookclickable', '');
 
-        if (book.link) {
-          entity.setAttribute('data-link', book.link);
-        }
-
-        carousel.appendChild(entity);
+        carousel.appendChild(el);
       });
 
-      // 4. Spin the whole carousel
-      carousel.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 60000; easing: linear');
+      carousel.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 60000');
 
-      // 5. Click behavior
       document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.book').forEach(el => {
+        document.querySelectorAll('.bookclick-target').forEach(el => {
           el.addEventListener('click', () => {
             const url = el.getAttribute('data-link');
             if (url) window.open(url, '_blank');
           });
         });
       });
+
+      AFRAME.registerComponent('bookclickable', {
+        init: function () {
+          const el = this.el;
+          const hitbox = document.createElement('a-box');
+          hitbox.setAttribute('position', '0 1 0');
+          hitbox.setAttribute('width', '1.5');
+          hitbox.setAttribute('height', '2');
+          hitbox.setAttribute('depth', '0.5');
+          hitbox.setAttribute('opacity', '0');
+          hitbox.setAttribute('class', 'bookclick-target');
+          hitbox.setAttribute('data-link', el.getAttribute('data-link'));
+          el.appendChild(hitbox);
+        }
+      });
     </script>
   </body>
 </html>
- 
